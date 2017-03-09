@@ -1,0 +1,13 @@
+<h2> Edit Post </h2>
+  <form>
+    <input value="vm.post.author" data-ng-model="vm.post.author"/>
+    <br>
+    <input value="vm.post.body" data-ng-model="vm.post.body"/>
+    <br>
+    <input value="vm.post.photo_url" data-ng-model="vm.post.photo_url">
+    <br>
+    <br>
+    <button type="button" data-ng-click="vm.update()">Update</button>
+    <br>
+    <button data-ng-click="vm.destroy()">Delete</button>
+  </form>

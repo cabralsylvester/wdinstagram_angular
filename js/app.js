@@ -1,107 +1,96 @@
 "use strict";
+var igData = [
+ {id: 0, photo_url: 'http://static.srcdn.com/wp-content/uploads/Superman-3D-Art.jpg'  author: "Superman", body: "DC"
+ {id: 1, photo_url: 'http://static.srcdn.com/wp-content/uploads/Superman-3D-Art.jpg'  author: "Incredible Hulk", body: "Marvel"
+ {id: 2, photo_url: 'http://static.srcdn.com/wp-content/uploads/Superman-3D-Art.jpg'  author: "InspectorGadget", body: "Marvel"
+]
 
-(function(){
-  angular.module("wdinstagram", [
-    "ui.router",
-    "ngResource"
+
+angular
+  .module("wdinstagram", ["ui.router"
+  "ngResource"])
+  .config(["$stateProvider", RouterFunction])
+  .factory("IGFactory", [
+    "$resource",
+    WDIGFactoryFunction
   ])
-  .config([
-     "$stateProvider",
-      RouterFunction
-    ])
+  .controller("WDIGIndexController", [
+    "IGFactory",
+    WDIGIndexControllerFunction
+  ])
+  .controller("WDIGIndexController", [
+    "IGFactory",
+    "$state",
+    WDIGNewControllerFunction
+  ])
+  .controller("WDIGShowController",[
+    "IGFactory",
+    "$stateParams",
+    "$state",
+    WDIGEditControllerFunction
+  ])
 
-    .factory("PostsFactory", [
-      "$resource",
-      PostsFactoryFunction
-    ])
+  function RouterFunction($stateProvider){
+    $stateProvider
+    .state("wdigIndex", {
+      url: "/ig",
+      templateUrl: "js/ng-views/index.html",
+      controller: "WDIGIndexController",
+      controllerAs: "vm"
+    })
+    .state("wdigNew", {
+      url: "/ig/new",
+      templateUrl: "js/ng-views/new.html",
+      controller: "WDIGNewController",
+      controllerAs: "vm"
+    })
+    .state("wdigShow", {
+      url: "/ig/:id",
+      templateUrl: "js/ng-views/show.html",
+      controller: "WDIGShowController"
+      controllerAs: "vm"
+    })
+    .state("wdigEdit", {
+      url: "/ig/:id/edit",
+      templateUrl: "js/ng-views/edit.html",
+      controller: "WDIGEditController",
+      controllerAs: "vm"
+    })
+  }
 
-    .controller("PostsIndexController", [
-      "PostsFactory",
-      PostsIndexControllerFunction
-    ])
+  function WDIGFactoryFunction($resource){
+    return $resource("http://localhost:3000/entries/:id",{}, {
+      update: {method:"PUT"}
+    })
+  }
 
-    .controller("PostShowController", [
-      "PostsFactory",
-      "$stateParams",
-      PostsShowControllerFunction
-    ])
+  function WDIGIndexControllerFunction(IGFactory) {
+    this.grams = IGFactory.query();
+  }
 
-    .controller("PostNewController", [
-      "PostsFactory",
-      "$state",
-      PostNewControllerFunction
-    ])
-
-    .controller("PostEditController", [
-      "PostsFactory",
-      "$stateParams",
-      "$state",
-      PostEditControllerFunction
-    ])
-
-
-    function RouterFunction($stateProvider){
-      $stateProvider
-      .state("postsIndex", {
-        url: "/posts",
-        templateUrl: "js/ng-views/index.html",
-        controller: "PostsIndexController",
-        controllerAs: "vm"
+  function WDIGNewControllerFunction(IGFactory, $state){
+    this.ig = new IGFactory();
+    this.create = function(){
+      this.ig.$save(function(gram) {
+        $state.go("igShow", {id: ig.id})
       })
-      .state("postNew", {
-        url: "/posts/new",
-        templateUrl: "js/ng-views/new.html",
-        controller: "PostNewController",
-        controllerAs: "vm"
-      })
-      .state("postShow", {
-        url: "/posts/:id",
-        templateUrl: "js/ng-views/show.html",
-        controller: "PostShowController",
-        controllerAs: "vm"
-      })
-      .state("postEdit", {
-        url: "/posts/:id/edit",
-        templateUrl: "js/ng-views/edit.html",
-        controller: "PostEditController",
-        controllerAs: "vm"
+    }
+  }
+
+  function WDIGShowControllerFunction(IGFactory, $stateParams) {
+    this.ig = IGFactory.get({id: $stateParams.id});
+  }
+
+  function WDIGEditControllerFunction(IGFactory, $stateParams, $state) {
+    this.ig = IGFactory.get({id: $stateParams.id});
+    this.update = function(){
+      this.ig.$update({id: $stateParams.id}, function(ig) {
+        $state.go("igShow", {id: ig.id})
       })
     }
-
-
-    function PostsFactoryFunction( $resource ) {
-      return $resource( "http://localhost:3000/entries/:id", {}, {
-        update: {method: "PUT" }
-      });
+    this.destroy = function(){
+      this.ig.$delete({id: $stateParams.id}, function(){
+        $state.go("igIndex")
+      })
     }
-
-    function PostsIndexControllerFunction( PostsFactory ){
-      this.posts = PostsFactory.query();
-    }
-
-    function PostNewControllerFunction( PostsFactory, $state ){
-      this.post = new PostsFactory();
-      this.create = function(){
-        this.post.$save(function(post) {
-          $state.go("postShow", {id: post.id})
-        })
-      }
-    }
-
-    function PostsShowControllerFunction(PostsFactory, $stateParams) {
-      this.post = PostsFactory.get({id: $stateParams.id});
-    }
-
-    function PostEditControllerFunction (PostFactory, $stateParams, $state) {
-      this.post = PostFactory.get({id: $stateParams.id});
-      this.update = function() {
-        this.post.$update({id: $stateParams.id}, function (post){
-          $state.go("postShow", {id: post.id})
-        })
-      }
-      this.destroy = function(){
-        this.post.$delete({id: $stateParams.id}, function (post){
-          $state.go('postsIndex')
-        });
-      }
-    }
+  }
